@@ -1,7 +1,6 @@
 import pygame
 import sys
-import math
-import random
+import numpy as np
 
 pygame.init()
 
@@ -15,45 +14,55 @@ trapper_count = 15
 trapped_count = 20
 trap_radius = 200
 trapped_speed = 2
-particle_size = 8
+tr_particle_size = 10
+td_particle_size = 5
 
 # Color choice
 screen_color = 'black'
 static_color = 'red'
 mobile_color = 'yellow'
 
+q_trapped = -4.8e-10 #charge
+q_trapper = 2*q_trapped
+m_trapped = 1.6e-27 * 1e-3 #mass
+
+dt = 1e-24 # time resolution
+
+
 # Canvas
 screen = pygame.display.set_mode((canvas_width, canvas_height))
 pygame.display.set_caption("Plasmatrap Simulation")
 
 # Creating the trapping (static) particles in an equidistant circular order
-static_particles = []
+pos_trapper = np.zeros((trapper_count, 2)) #infinite mass
 for i in range(trapper_count):
-    posx = canvas_width // 2 + int(trap_radius * math.cos(2 * math.pi * i / trapper_count))
-    posy = canvas_height // 2 + int(trap_radius * math.sin(2 * math.pi * i / trapper_count))
-    static_particles.append([posx,posy])
+    posx = canvas_width // 2 + int(trap_radius * np.cos(2 * np.pi * i / trapper_count))
+    posy = canvas_height // 2 + int(trap_radius * np.sin(2 * np.pi * i / trapper_count))
+    pos_trapper[i] = [posx, posy]
+    
+    pygame.draw.circle(screen, static_color, [posx,posy], tr_particle_size) ### draw
+    
 
-# scattering the mobile particles within the trap in a random distance from the center
-mobile_particles = []
+# initial random position of the trapped sprites 
+pos_trapped = np.zeros((trapped_count, 2))
 for i in range(trapped_count):
-    posx = canvas_width // 2 + random.randint(-trap_radius, trap_radius)
-    posy = canvas_height // 2 + random.randint(-trap_radius, trap_radius)
-    mobile_particles.append([posx,posy])
+    radius_i = np.random.rand()*trap_radius
+    theta_i = np.random.rand()*2*np.pi    
+    posx = canvas_width // 2 + int(radius_i * np.cos(theta_i))
+    posy = canvas_height // 2 + int(radius_i * np.sin(theta_i))
+    pos_trapped[i]=[posx,posy]
+
+mtm_trapped = np.zeros((trapped_count, 2))
 
 while True:
     for e in pygame.event.get():
         if e.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
-    
-    ## Drawing        
-    screen.fill(screen_color)
-    for particle in static_particles:
-        pygame.draw.circle(screen, static_color, particle, particle_size)
 
-    for particle in mobile_particles:
+    for particle in pos_trapped:
         print(particle)
-        pygame.draw.circle(screen, mobile_color, particle, particle_size)
+        pygame.draw.circle(screen, mobile_color, particle.tolist(), td_particle_size)
     
     pygame.display.flip()
     pygame.time.Clock().tick(frame_rate)
