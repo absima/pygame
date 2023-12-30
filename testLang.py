@@ -53,13 +53,15 @@ pos_real = np.column_stack((radiuss*np.cos(thetaas), radiuss*np.sin(thetaas)))
 mtm_trapped = np.zeros((trapped_count, 2))
 clrs = ['y', 'b', 'g', 'c', 'purple']
 pl.close('all')
-pl.figure(figsize=(4,4))
+pl.figure(figsize=(3,3))
 pl.plot(pos_trpr[:,0], pos_trpr[:,1], 'ro', ms=10)
 for i in range(50):
     pl.scatter(pos_real[:,0], pos_real[:,1], marker='o', c=clrs, s=2)
     pl.xlim(-scale, scale)
     pl.ylim(-scale, scale)
-    pl.savefig("%d.pdf"%i, format="pdf")
+    pl.xticks([])
+    pl.yticks([])
+    
     pl.show()
         
     ## simple Euler method    
@@ -71,7 +73,7 @@ for i in range(50):
     print(i, escaped)
     print()
     
-    
+pl.savefig("%d.png"%(i+1), format="png")    
     
     
     
