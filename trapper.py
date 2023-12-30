@@ -1,7 +1,7 @@
 import pygame
 import sys
 import numpy as np
-
+from scipy.integrate import odeint
 
 # Constants
 canvas_width = 700 
@@ -32,7 +32,7 @@ dt = 1e-24 # time resolution
 
 scale = 1e-11
 
-
+### rate of change in momentum (p_dot)
 def mtmRate(pos):
     pdots = np.zeros((len(pos),2))
     for i, pos_i in enumerate(pos):
@@ -47,7 +47,8 @@ def mtmRate(pos):
     
         pdots[i] = np.sum(pterm,0)+np.sum(tterm,0)
     return pdots
-    
+
+### transform 2-D physical model to the screen    
 def transform(pos):
     ### to screen
     pdiag_src = scale*np.array([-1, -1])
@@ -70,7 +71,7 @@ pygame.init()
 screen = pygame.display.set_mode((canvas_width, canvas_height))
 pygame.display.set_caption("Plasmatrap Simulation")
 
-# # Creating the trapping (static) particles in an equidistant circular order
+# # Creating the trapping (static/heavy) particles in an equidistant circular order
 #     # pygame.draw.circle(screen, static_color, [posx,posy], tr_particle_size) ### draw
 ang_trpr = np.arange(trapper_count)*2*np.pi/trapper_count
 pos_trpr = trap_radius * np.column_stack((np.cos(ang_trpr), np.sin(ang_trpr)))
@@ -94,24 +95,22 @@ while True:
     pdots = mtmRate(pos_real)
     mtm_trapped += dt*pdots
     pos_real += dt*mtm_trapped/m_trapped
+    ## how many escaped
+    escaped = trap_radius-np.linalg.norm(pos_real, axis=1)
+    nescaped = len(np.where(escaped<0)[0])
+    print()
+    print("%d particles escaped the trap"%nescaped)
+    print()
+    ## exact integration
+    
     
     ### magnify to screen canvas
     pos_trapped = transform(pos_real)
     
-    print ("positions")
-    # print(pos_trapped)
-    print()
    
     screen.fill(screen_color)
     i=0
     for trapper in pos_trapper:
-        if i==0:
-            static_color = 'white'
-        elif i==1:
-            static_color = 'blue'
-        else:
-            static_color = 'red'
-        i+=1
         pygame.draw.circle(screen, static_color, trapper.tolist(), tr_particle_size) ### draw
     
     for particle in pos_trapped:
